@@ -1,0 +1,35 @@
+application:
+  name: bookstack
+  pods:
+  - name: app
+    image: linuxserver/bookstack:latest
+    path: /
+    servicePorts:
+    - 80
+    vars:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: "UTC"
+      APP_URL: "https://relaxed-weasel-bookstack.cloud.nexlayer.ai"
+      DB_HOST: mysql.pod
+      DB_PORT: "3306"
+      DB_USER: bookstack
+      DB_PASS: bookstack
+      DB_DATABASE: bookstack
+    volumes:
+    - name: bookstack-config
+      mountPath: /config
+      size: 5Gi
+  - name: mysql
+    image: mysql:8
+    servicePorts:
+    - 3306
+    vars:
+      MYSQL_DATABASE: bookstack
+      MYSQL_USER: bookstack
+      MYSQL_PASSWORD: bookstack
+      MYSQL_ROOT_PASSWORD: rootpass
+    volumes:
+    - name: bookstack-db
+      mountPath: /var/lib/mysql
+      size: 5Gi
