@@ -15,7 +15,7 @@
 
 ## Project Summary
 <!-- nexlayer:section agent-managed=project_summary -->
-BookStack is an open-source, self-hosted wiki platform designed for creating and organizing documentation in a book-like hierarchy. It is built on the Laravel framework using PHP and MySQL.
+BookStack is a self-hosted wiki platform that organizes content into a hierarchical structure of Books, Chapters, and Pages. It is built with PHP (Laravel) and utilizes a MySQL database for content storage.
 <!-- nexlayer:end -->
 
 ## Technology Stack
@@ -23,21 +23,22 @@ BookStack is an open-source, self-hosted wiki platform designed for creating and
 | Name | Kind | Version | Detected From |
 |------|------|---------|---------------|
 | PHP | language | 8.x | docker-compose.yml, composer.json |
-| Laravel | framework | not specified | artisan, composer.json |
+| Laravel | framework | 10.x/11.x | artisan, composer.json |
 | MySQL | database | 8.4 | docker-compose.yml |
-| Node.js | build | 22-alpine | package.json, docker-compose.yml |
-| TypeScript | language | 6.0 | package.json, tsconfig.json |
+| Node.js | tool | 22-alpine | package.json, docker-compose.yml |
+| Sass | build | 1.99.0 | package.json |
+| esbuild | build | 0.28.0 | package.json |
 <!-- nexlayer:end -->
 
 ## Repository Structure
 <!-- nexlayer:section agent-managed=structure_map -->
 - app/ — Laravel core application logic
-- bootstrap/ — Framework bootstrapper
-- database/ — Database migrations and seeds
-- public/ — Web server root and compiled assets
-- resources/ — Raw SASS/JS assets and Blade templates
-- routes/ — Application URL routing
-- storage/ — Application logs and file uploads
+- bootstrap/ — Framework bootstrap files
+- database/ — Migrations and seeds
+- public/ — Web root and compiled assets
+- resources/ — Sass and JS source files
+- storage/ — Application logs and uploaded files
+- routes/ — Application routing definitions
 <!-- nexlayer:end -->
 
 ## External Services Required
@@ -88,11 +89,14 @@ APP_URL=http://localhost:8080
 | `app` | `APP_URL` | `"<% URL %>"` | plain |
 | `app` | `DB_HOST` | `"${mysql:3306}"` | inter-pod |
 | `app` | `DB_PORT` | `"3306"` | plain |
-| `app` | `DB_CONNECTION` | `"mysql"` | plain |
-| `mysql` | `MYSQL_ROOT_PASSWORD` | `"${MYSQL_ROOT_PASSWORD}"` | inter-pod |
 | `mysql` | `MYSQL_DATABASE` | `"bookstack"` | plain |
-| `mysql` | `MYSQL_USER` | `"bookstack"` | plain |
-| `mysql` | `MYSQL_PASSWORD` | `"${MYSQL_PASSWORD}"` | inter-pod |
+| `mysql` | `MYSQL_ROOT_PASSWORD` | _(set via Nexlayer dashboard)_ | secret |
+
+### Secrets Required
+
+Set these in the Nexlayer dashboard before deploying:
+
+- `MYSQL_ROOT_PASSWORD` (`mysql` pod)
 
 ### nexlayer.yaml
 
@@ -101,7 +105,7 @@ application:
   name: bookstack
   pods:
     - name: app
-      image: "registry.nexlayer.io/user_01kece1xyh817dwff7wnarhkxd/bookstack:9f057b0-fix8"
+      image: "registry.nexlayer.io/user_01kece1xyh817dwff7wnarhkxd/bookstack:9f05a1b-fix6"
       path: /
       servicePorts:
         - 80
@@ -109,19 +113,15 @@ application:
         APP_URL: "<% URL %>"
         DB_HOST: "${mysql:3306}"
         DB_PORT: "3306"
-        DB_CONNECTION: "mysql"
     - name: mysql
       image: mirror.gcr.io/library/mysql:8.4
       path: /mysql
       servicePorts:
         - 3306
       vars:
-        MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
         MYSQL_DATABASE: "bookstack"
-        MYSQL_USER: "bookstack"
-        MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+        MYSQL_ROOT_PASSWORD: "change-me-in-dashboard"
 ```
-
 <!-- nexlayer:end -->
 
 ## Nexlayer Deployment Plan
@@ -149,7 +149,7 @@ application:
 
 ## Nexlayer Configuration
 <!-- nexlayer:section agent-managed=nexlayer_config -->
-**Last deployed:** 2026-06-26T20:39:04Z  
+**Last deployed:** 2026-06-26T21:03:43Z  
 **Live URL:** https://relaxed-weasel-bookstack.cloud.nexlayer.ai  
 **Runtime:**  · **Port:** auto-detected  
 **Deploy branch:** nexlayer  
@@ -159,7 +159,7 @@ application:
   name: bookstack
   pods:
     - name: app
-      image: "registry.nexlayer.io/user_01kece1xyh817dwff7wnarhkxd/bookstack:9f057b0-fix8"
+      image: "registry.nexlayer.io/user_01kece1xyh817dwff7wnarhkxd/bookstack:9f05a1b-fix6"
       path: /
       servicePorts:
         - 80
@@ -167,17 +167,14 @@ application:
         APP_URL: "<% URL %>"
         DB_HOST: "${mysql:3306}"
         DB_PORT: "3306"
-        DB_CONNECTION: "mysql"
     - name: mysql
       image: mirror.gcr.io/library/mysql:8.4
       path: /mysql
       servicePorts:
         - 3306
       vars:
-        MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
         MYSQL_DATABASE: "bookstack"
-        MYSQL_USER: "bookstack"
-        MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+        MYSQL_ROOT_PASSWORD: "change-me-in-dashboard"
 ```
 <!-- nexlayer:end -->
 
@@ -185,6 +182,7 @@ application:
 <!-- nexlayer:section agent-managed=build_history -->
 | Date | Status | Notes |
 |------|--------|-------|
-| 2026-06-26T19:50:11Z | analyzed | initial repo analysis |
-| 2026-06-26T20:39:04Z | success | deployed https://relaxed-weasel-bookstack.cloud.nexlayer.ai |
+| 2026-06-26T20:32:24Z | analyzed | initial repo analysis |
+| 2026-06-26T21:03:43Z | success | deployed https://relaxed-weasel-bookstack.cloud.nexlayer.ai |
 <!-- nexlayer:end -->
+

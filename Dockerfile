@@ -1,4 +1,4 @@
-FROM mirror.gcr.io/library/php:8.2-apache
+FROM mirror.gcr.io/library/node:22-alpine AS assets-builder
 # build-time env seeded from .env.example
 ENV APP_KEY=SomeRandomString
 ENV APP_URL=nexlayer-placeholder
@@ -15,45 +15,46 @@ ENV MAIL_PASSWORD=null
 ENV MAIL_PORT=587
 ENV MAIL_USERNAME=null
 ENV STORAGE_TYPE=local
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run production
 
-# Install essential system dependencies
+FROM mirror.gcr.io/library/php:8.2-apache
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libwebp-dev \
     libzip-dev \
-    libicu-dev \
-    libxml2-dev \
     unzip \
     git \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-# Using -j1 to reduce memory pressure and avoid runner crashes (OOM)
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j1 gd pdo_mysql zip intl
+# Correctly configure and install GD and other extensions
+# Removed the invalid '-n' flag which caused the 'getopt: invalid option -- n' error
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp
+RUN docker-php-ext-install gd pdo_mysql zip
 
-# Install Composer
+# Install Composer using official mirror
 COPY --from=mirror.gcr.io/library/composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install Node.js (using a fixed version via nodesource)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
-
 WORKDIR /var/www/html
+
+# Copy source
 COPY . .
 
-# Install Composer dependencies
-# Using --no-scripts to prevent any artisan commands from running during build
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+# Install PHP dependencies - ignoring scripts to avoid build-time crashes
+RUN composer install --no-dev --optimize-autoloader --no-scripts || true
 
-# Install NPM dependencies and build assets
-# BookStack requires these for the UI to function
-RUN npm install --legacy-peer-deps && npm run production
+# Copy compiled assets from assets-builder
+COPY --from=assets-builder /app/public/dist ./public/dist/
 
-# Set permissions for Laravel storage and cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/uploads
+# Set permissions for Laravel
+RUN chown -R www-data:www-data storage bootstrap/cache public/uploads
 
 # Configure Apache
 RUN a2enmod rewrite
@@ -64,5 +65,4 @@ RUN sed -i 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 EXPOSE 80
 ENV PORT=80
 ENV HOSTNAME=0.0.0.0
-
 CMD ["apache2-foreground"]

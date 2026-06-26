@@ -2,7 +2,7 @@ application:
   name: bookstack
   pods:
     - name: app
-      image: "registry.nexlayer.io/user_01kece1xyh817dwff7wnarhkxd/bookstack:9f057b0-fix8"
+      image: "registry.nexlayer.io/user_01kece1xyh817dwff7wnarhkxd/bookstack:9f05a1b-fix6"
       path: /
       servicePorts:
         - 80
@@ -10,14 +10,11 @@ application:
         APP_URL: "<% URL %>"
         DB_HOST: "${mysql:3306}"
         DB_PORT: "3306"
-        DB_CONNECTION: "mysql"
     - name: mysql
       image: mirror.gcr.io/library/mysql:8.4
       path: /mysql
       servicePorts:
         - 3306
       vars:
-        MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
         MYSQL_DATABASE: "bookstack"
-        MYSQL_USER: "bookstack"
-        MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+        MYSQL_ROOT_PASSWORD: "change-me-in-dashboard"
