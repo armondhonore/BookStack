@@ -8,8 +8,13 @@ application:
         - 80
       vars:
         APP_URL: "<% URL %>"
-        DB_HOST: "${mysql:3306}"
+        APP_KEY: "base64:cVNtQ0xQVmtFa0Z6eVZ3YkpESmZ3eHpwUlpxN2hLZGc="
+        DB_CONNECTION: "mysql"
+        DB_HOST: "bookstack-mysql-service"
         DB_PORT: "3306"
+        DB_DATABASE: "bookstack"
+        DB_USERNAME: "bookstack"
+        DB_PASSWORD: "BookstackPass2026"
     - name: mysql
       image: mirror.gcr.io/library/mysql:8.4
       path: /mysql
@@ -17,4 +22,6 @@ application:
         - 3306
       vars:
         MYSQL_DATABASE: "bookstack"
+        MYSQL_USER: "bookstack"
+        MYSQL_PASSWORD: "BookstackPass2026"
         MYSQL_ROOT_PASSWORD: "change-me-in-dashboard"
